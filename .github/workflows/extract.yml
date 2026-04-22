@@ -33,9 +33,6 @@ jobs:
           wget -q https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar \
             -O /tmp/bfg.jar
 
-      - name: Install git-filter-repo
-        run: pip install git-filter-repo
-
       - name: Mirror clone source repo
         env:
           TOKEN: ${{ secrets[format('GE_SRC_{0}', inputs.run_id)] }}
@@ -43,12 +40,11 @@ jobs:
           HOST=$(echo "${{ inputs.source_repo }}" | sed 's|https://||')
           git clone --mirror "https://oauth2:${TOKEN}@${HOST}" /tmp/source.git
 
-      - name: BFG — strip top-level dirs outside source path
+      - name: BFG — strip top-level dirs outside source path prefix
         run: |
           SOURCE_ROOT=$(echo "${{ inputs.source_path }}" | cut -d/ -f1)
           cd /tmp/source.git
 
-          # Collect all top-level tree dirs except the one we need
           UNWANTED=$(
             git ls-tree HEAD \
               | awk '$2 == "tree" {print $4}' \
@@ -68,13 +64,41 @@ jobs:
       - name: Clone working copy from stripped mirror
         run: git clone /tmp/source.git /tmp/source
 
-      - name: Rename path with git-filter-repo
+      - name: Rewrite paths with fast-export/fast-import
         run: |
+          SRC="${{ inputs.source_path }}"
+          TGT="${{ inputs.target_path }}"
           cd /tmp/source
-          git filter-repo \
-            --subdirectory-filter "${{ inputs.source_path }}" \
-            --to-subdirectory-filter "${{ inputs.target_path }}" \
-            --force
+
+          git fast-export --all | awk \
+            -v src="$SRC" \
+            -v tgt="$TGT" '
+            # Rewrite or drop file modify/delete lines based on path
+            /^[MD] / {
+              # Extract path (last field, may contain spaces — use sub to split at correct point)
+              line = $0
+              if (line ~ "^M ") {
+                # M <mode> <dataref> <path>
+                match(line, /^M [0-9]+ [^ ]+ /)
+                prefix = substr(line, 1, RLENGTH)
+                path   = substr(line, RLENGTH + 1)
+              } else {
+                # D <path>
+                prefix = "D "
+                path   = substr(line, 3)
+              }
+
+              if (path == src || index(path, src "/") == 1) {
+                sub(src, tgt, path)
+                print prefix path
+              }
+              # Drop lines for paths outside source_path (siblings left by BFG at deeper levels)
+              next
+            }
+            { print }
+          ' | git fast-import --force --quiet
+
+          git checkout HEAD -- .
 
       - name: Push to target repo
         env:
