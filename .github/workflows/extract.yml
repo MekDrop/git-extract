@@ -61,29 +61,22 @@ jobs:
             git gc --prune=now --aggressive
           fi
 
-      - name: Clone working copy from stripped mirror
-        run: git clone /tmp/source.git /tmp/source
-
       - name: Rewrite paths with fast-export/fast-import
         run: |
           SRC="${{ inputs.source_path }}"
           TGT="${{ inputs.target_path }}"
-          cd /tmp/source
+          cd /tmp/source.git
 
           git fast-export --all | awk \
             -v src="$SRC" \
             -v tgt="$TGT" '
-            # Rewrite or drop file modify/delete lines based on path
             /^[MD] / {
-              # Extract path (last field, may contain spaces — use sub to split at correct point)
               line = $0
               if (line ~ "^M ") {
-                # M <mode> <dataref> <path>
                 match(line, /^M [0-9]+ [^ ]+ /)
                 prefix = substr(line, 1, RLENGTH)
                 path   = substr(line, RLENGTH + 1)
               } else {
-                # D <path>
                 prefix = "D "
                 path   = substr(line, 3)
               }
@@ -92,19 +85,16 @@ jobs:
                 sub(src, tgt, path)
                 print prefix path
               }
-              # Drop lines for paths outside source_path (siblings left by BFG at deeper levels)
               next
             }
             { print }
           ' | git fast-import --force --quiet
-
-          git checkout HEAD -- .
 
       - name: Push to target repo
         env:
           TOKEN: ${{ secrets[format('GE_TGT_{0}', inputs.run_id)] }}
         run: |
           HOST=$(echo "${{ inputs.target_repo }}" | sed 's|https://||')
-          cd /tmp/source
+          cd /tmp/source.git
           git remote set-url origin "https://oauth2:${TOKEN}@${HOST}"
           git push origin "HEAD:${{ inputs.target_branch }}" --force
