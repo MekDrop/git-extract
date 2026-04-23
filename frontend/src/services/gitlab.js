@@ -58,3 +58,25 @@ export async function exchangeGitlabCode(code) {
 
   return response.json();
 }
+
+const apiBase = (host) => `https://${host}/api/v4`
+
+const glHeaders = (token) => ({ Authorization: `Bearer ${token}` })
+
+async function glFetch(url, token) {
+  const res = await fetch(url, { headers: glHeaders(token) })
+  if (!res.ok) return { error: res.status, message: await res.text() }
+  return res.json()
+}
+
+export const getUser = (token, host = 'gitlab.com') =>
+  glFetch(`${apiBase(host)}/user`, token)
+
+export const listProjects = (token, host = 'gitlab.com', page = 1) =>
+  glFetch(`${apiBase(host)}/projects?membership=true&per_page=50&page=${page}`, token)
+
+export const getBranches = (token, host = 'gitlab.com', id) =>
+  glFetch(`${apiBase(host)}/projects/${id}/repository/branches`, token)
+
+export const getTree = (token, host = 'gitlab.com', id, ref) =>
+  glFetch(`${apiBase(host)}/projects/${id}/repository/tree?recursive=true&pagination=none&ref=${ref}`, token)
