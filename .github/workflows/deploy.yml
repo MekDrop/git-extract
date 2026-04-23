@@ -1,12 +1,16 @@
-name: Lint and Build
+name: Deploy Worker
 
 on:
-  pull_request:
+  push:
     branches: [main]
+    paths:
+      - 'worker/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 jobs:
-  lint-and-build:
-    name: Frontend & Worker — lint and build
+  deploy:
+    name: Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,11 +28,8 @@ jobs:
             ${{ runner.os }}-node-
       - name: Install dependencies
         run: npm install
-      - name: Lint frontend
-        run: npm -w frontend run lint
-      - name: Lint worker
-        run: npm -w worker run lint
-      - name: Build frontend
-        run: npm -w frontend run build
-      - name: Build worker
-        run: npm -w worker run build
+      - name: Deploy worker
+        run: npm -w worker run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
