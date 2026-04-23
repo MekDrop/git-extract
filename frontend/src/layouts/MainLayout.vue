@@ -1,9 +1,23 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="hHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
-        <q-toolbar-title>git-extract</q-toolbar-title>
+        <q-toolbar-title>
+          <router-link to="/repos" class="text-white text-decoration-none">git-extract</router-link>
+        </q-toolbar-title>
+
+        <template v-if="auth.isLoggedIn">
+          <q-chip outline color="white" class="q-mr-sm">
+            <q-avatar>
+              <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" />
+              <q-icon v-else name="person" />
+            </q-avatar>
+            {{ auth.user?.login || auth.user?.username }}
+            <q-badge :label="auth.provider" color="grey-7" class="q-ml-xs" />
+          </q-chip>
+
+          <q-btn flat dense label="Logout" @click="logout" />
+        </template>
       </q-toolbar>
     </q-header>
 
@@ -14,11 +28,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useAuthStore } from '../stores/auth.js'
+import { useRouter } from 'vue-router'
 
-const leftDrawerOpen = ref(false)
+const auth = useAuthStore()
+const router = useRouter()
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+function logout() {
+  auth.logout()
+  router.push('/login')
 }
 </script>
