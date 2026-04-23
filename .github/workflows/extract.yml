@@ -1,0 +1,100 @@
+name: git-extract
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        required: true
+        description: Unique ID used to name per-run secrets (avoids concurrent collision)
+      source_repo:
+        required: true
+        description: Full HTTPS clone URL (GitHub or GitLab, any host)
+      source_path:
+        required: true
+        description: Subdirectory to extract, e.g. packages/ui
+      target_repo:
+        required: true
+        description: Full HTTPS push URL (GitHub or GitLab, any host)
+      target_branch:
+        required: true
+        default: main
+        description: Branch to force-push the filtered history onto
+      target_path:
+        required: true
+        default: src
+        description: Subdirectory in target repo to place the extracted history under
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download BFG
+        run: |
+          wget -q https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar \
+            -O /tmp/bfg.jar
+
+      - name: Mirror clone source repo
+        env:
+          TOKEN: ${{ secrets[format('GE_SRC_{0}', inputs.run_id)] }}
+        run: |
+          HOST=$(echo "${{ inputs.source_repo }}" | sed 's|https://||')
+          git clone --mirror "https://oauth2:${TOKEN}@${HOST}" /tmp/source.git
+
+      - name: BFG — strip top-level dirs outside source path prefix
+        run: |
+          SOURCE_ROOT=$(echo "${{ inputs.source_path }}" | cut -d/ -f1)
+          cd /tmp/source.git
+
+          UNWANTED=$(
+            git ls-tree HEAD \
+              | awk '$2 == "tree" {print $4}' \
+              | grep -v "^${SOURCE_ROOT}$" \
+              | paste -sd,
+          )
+
+          if [ -n "$UNWANTED" ]; then
+            java -jar /tmp/bfg.jar \
+              --delete-folders "{${UNWANTED}}" \
+              --no-blob-protection \
+              /tmp/source.git
+            git reflog expire --expire=now --all
+            git gc --prune=now --aggressive
+          fi
+
+      - name: Rewrite paths with fast-export/fast-import
+        run: |
+          SRC="${{ inputs.source_path }}"
+          TGT="${{ inputs.target_path }}"
+          cd /tmp/source.git
+
+          git fast-export --all | awk \
+            -v src="$SRC" \
+            -v tgt="$TGT" '
+            /^[MD] / {
+              line = $0
+              if (line ~ "^M ") {
+                match(line, /^M [0-9]+ [^ ]+ /)
+                prefix = substr(line, 1, RLENGTH)
+                path   = substr(line, RLENGTH + 1)
+              } else {
+                prefix = "D "
+                path   = substr(line, 3)
+              }
+
+              if (path == src || index(path, src "/") == 1) {
+                sub(src, tgt, path)
+                print prefix path
+              }
+              next
+            }
+            { print }
+          ' | git fast-import --force --quiet
+
+      - name: Push to target repo
+        env:
+          TOKEN: ${{ secrets[format('GE_TGT_{0}', inputs.run_id)] }}
+        run: |
+          HOST=$(echo "${{ inputs.target_repo }}" | sed 's|https://||')
+          cd /tmp/source.git
+          git remote set-url origin "https://oauth2:${TOKEN}@${HOST}"
+          git push origin "HEAD:${{ inputs.target_branch }}" --force
