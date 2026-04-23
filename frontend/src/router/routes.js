@@ -3,17 +3,15 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: '', redirect: '/repos' },
       { path: '/login', component: () => import('pages/LoginPage.vue') },
       { path: '/auth/github', component: () => import('pages/AuthCallback.vue') },
       { path: '/auth/gitlab', component: () => import('pages/AuthCallback.vue') },
-      { path: '/repos', component: () => import('pages/ReposPage.vue') },
+      { path: '/repos', component: () => import('pages/ReposPage.vue'), meta: { requiresAuth: true } },
+      { path: '/extract', component: () => import('pages/ExtractPage.vue'), meta: { requiresAuth: true } },
     ],
   },
-  {
-    path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
-  },
+  { path: '/:catchAll(.*)*', component: () => import('pages/ErrorNotFound.vue') },
 ]
 
 export default routes
