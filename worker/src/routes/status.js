@@ -1,23 +1,11 @@
 const GH_API = 'https://api.github.com'
 
-function corsHeaders(env) {
-  return {
-    'Access-Control-Allow-Origin': env.SPA_URL,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  }
-}
-
 export async function handleStatus(request, env) {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(env) })
-  }
-
   const url = new URL(request.url)
   const runId = url.searchParams.get('runId')
 
   if (!runId) {
-    return Response.json({ error: 'Missing runId query parameter' }, { status: 400, headers: corsHeaders(env) })
+    return Response.json({ error: 'Missing runId query parameter' }, { status: 400 })
   }
 
   const res = await fetch(
@@ -32,12 +20,11 @@ export async function handleStatus(request, env) {
   )
 
   if (!res.ok) {
-    return Response.json({ error: 'Run not found' }, { status: res.status, headers: corsHeaders(env) })
+    return Response.json({ error: 'Run not found' }, { status: res.status })
   }
 
   const run = await res.json()
   return Response.json(
     { status: run.status, conclusion: run.conclusion, runUrl: run.html_url },
-    { headers: corsHeaders(env) },
   )
 }

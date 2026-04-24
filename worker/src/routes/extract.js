@@ -2,31 +2,19 @@ import { orchestrate } from '../services/actionsOrchestrator.js'
 
 const REQUIRED = ['sourceRepoUrl', 'sourceToken', 'sourcePath', 'targetRepoUrl', 'targetToken', 'targetBranch', 'targetPath']
 
-function corsHeaders(env) {
-  return {
-    'Access-Control-Allow-Origin': env.SPA_URL,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  }
-}
-
 export async function handleExtract(request, env, ctx) {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(env) })
-  }
-
   let body
   try {
     body = await request.json()
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: corsHeaders(env) })
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
   const missing = REQUIRED.filter((k) => !body[k])
   if (missing.length) {
     return Response.json(
       { error: `Missing required fields: ${missing.join(', ')}` },
-      { status: 400, headers: corsHeaders(env) },
+      { status: 400 },
     )
   }
 
@@ -35,5 +23,5 @@ export async function handleExtract(request, env, ctx) {
 
   ctx.waitUntil(orchestrate({ ...body, runId }, env).catch(() => {}))
 
-  return Response.json({ runId, runUrl }, { headers: corsHeaders(env) })
+  return Response.json({ runId, runUrl })
 }
