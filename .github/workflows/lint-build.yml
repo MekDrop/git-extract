@@ -6,7 +6,7 @@ on:
 
 jobs:
   lint-and-build:
-    name: Frontend & Worker — lint and build
+    name: Frontend — lint and build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,11 +24,7 @@ jobs:
             ${{ runner.os }}-node-
       - name: Install dependencies
         run: npm install
-      - name: Lint frontend
+      - name: Lint
         run: npm -w frontend run lint
-      - name: Lint worker
-        run: npm -w worker run lint
-      - name: Build frontend
+      - name: Build
         run: npm -w frontend run build
-      - name: Build worker
-        run: npm -w worker run build
