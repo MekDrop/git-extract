@@ -3,14 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "frontend",
-    "worker"
+    "frontend"
   ],
   "scripts": {
-    "dev:frontend": "npm -w frontend run dev",
-    "dev:worker": "npm -w worker run dev",
-    "build": "npm -w frontend run build && npm -w worker run build",
-    "lint": "npm -w frontend run lint && npm -w worker run lint"
+    "dev": "npm -w frontend run dev",
+    "build": "npm -w frontend run build",
+    "lint": "npm -w frontend run lint"
   },
   "engines": {
     "node": ">=18"
