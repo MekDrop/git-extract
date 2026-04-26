@@ -79,7 +79,7 @@
 
           <div class="w98-btn-sep" />
 
-          <button class="w98-btn" @click="logout">Cancel</button>
+          <button class="w98-btn" @click="logout">Restart</button>
         </div>
       </div>
     </div>
