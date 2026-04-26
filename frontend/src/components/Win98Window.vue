@@ -28,10 +28,8 @@
         <span class="w98-titlebar__text">{{ title }}</span>
 
         <div class="w98-titlebar__controls" @mousedown.stop>
-          <button class="w98-chrome-btn" title="Minimize" @click.stop="minimize">_</button>
-          <button class="w98-chrome-btn" :title="maximized ? 'Restore' : 'Maximize'" @click.stop="toggleMaximize">
-            {{ maximized ? '❐' : '□' }}
-          </button>
+          <button class="w98-chrome-btn" title="Minimize" disabled>_</button>
+          <button class="w98-chrome-btn" title="Maximize" disabled>□</button>
           <button class="w98-chrome-btn w98-chrome-btn--close" title="Close" @click.stop="openCloseDialog">✕</button>
         </div>
       </div>
@@ -133,10 +131,6 @@ function onMouseUp() {
 }
 
 // ── Window controls ─────────────────────────────────────────────
-function minimize() {
-  minimized.value = true
-}
-
 function restore() {
   minimized.value = false
 }
@@ -260,9 +254,16 @@ function confirmClose() {
     padding: 1px 0 0 1px;
   }
 
+  &:disabled {
+    color: #808080;
+    cursor: default;
+    text-shadow: 1px 1px #fff;
+    &:active { box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #e8e8e8; padding: 0; }
+  }
+
   &--close {
     margin-left: 2px;
-    &:hover { background: #e04040; color: #fff; }
+    &:hover:not(:disabled) { background: #e04040; color: #fff; }
   }
 }
 
