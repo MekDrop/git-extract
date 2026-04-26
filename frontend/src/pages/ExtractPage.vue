@@ -6,7 +6,7 @@
       <div class="wiz-page__head">
         <div class="wiz-page__head-icon">⚙</div>
         <div class="wiz-page__head-text">
-          <div class="wiz-page__step-label">Step 3 of 3</div>
+          <div class="wiz-page__step-label">Step 4 of 4</div>
           <h1 class="wiz-page__title">Configure Extraction</h1>
           <p class="wiz-page__desc">No repository selected.</p>
         </div>
@@ -21,7 +21,7 @@
       <div class="wiz-page__head">
         <div class="wiz-page__head-icon">🚀</div>
         <div class="wiz-page__head-text">
-          <div class="wiz-page__step-label">Step 4 of 3</div>
+          <div class="wiz-page__step-label">Step 4 of 4</div>
           <h1 class="wiz-page__title">Extracting…</h1>
           <p class="wiz-page__desc">
             {{ source.fullName }} → {{ store.selectedTarget?.fullName }}
@@ -48,7 +48,7 @@
       <div class="wiz-page__head">
         <div class="wiz-page__head-icon">⚙</div>
         <div class="wiz-page__head-text">
-          <div class="wiz-page__step-label">Step 3 of 3</div>
+          <div class="wiz-page__step-label">Step 4 of 4</div>
           <h1 class="wiz-page__title">Configure Extraction</h1>
           <p class="wiz-page__desc">
             Select a source folder, choose the destination, then click
@@ -61,7 +61,7 @@
         <!-- Source repo + branch -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <span class="w98-field-label" style="margin:0">Source:</span>
-          <span style="font-size:12px;font-weight:700;color:#1e2e4a">{{ source.fullName }}</span>
+          <span style="font-size:12px;font-weight:700;color:$primary">{{ source.fullName }}</span>
           <select v-model="sourceBranch" class="w98-select" @change="loadTree">
             <option v-for="b in sourceBranches" :key="b" :value="b">{{ b }}</option>
           </select>
@@ -296,7 +296,7 @@ function reset() {
     inset  1px  1px #0a0a0a,
     inset -1px -1px #ffffff,
     inset  2px  2px #808080,
-    inset -2px -2px #dfdfdf;
+    inset -2px -2px #e8e8e8;
   background: #fff;
   cursor: pointer;
 
@@ -314,7 +314,7 @@ function reset() {
     inset  1px  1px #0a0a0a,
     inset -1px -1px #ffffff,
     inset  2px  2px #808080,
-    inset -2px -2px #dfdfdf;
+    inset -2px -2px #e8e8e8;
   background: #fff;
   box-sizing: border-box;
 }

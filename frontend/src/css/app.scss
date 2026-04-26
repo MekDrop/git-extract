@@ -1,6 +1,6 @@
 // app global css / scss goes here
 
-// ── Shared page chrome (used by every page inside WizardLayout) ────
+// ── Shared page chrome (inside WizardLayout) ───────────────────────
 
 .wiz-page {
   display: flex;
@@ -8,7 +8,7 @@
   height: 100%;
   font-size: 12px;
 
-  // Step title banner — matches Win98 dialog header style
+  // Header banner — Win98 dialog title area
   &__head {
     flex-shrink: 0;
     display: flex;
@@ -17,15 +17,10 @@
     padding: 14px 18px 12px;
     background: #fff;
     border-bottom: 2px solid;
-    border-color: #808080 #fff #fff #808080; // inset separator
+    border-color: #808080 #fff #fff #808080;
   }
 
-  &__head-icon {
-    font-size: 28px;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
+  &__head-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
   &__head-text { flex: 1; }
 
   &__step-label {
@@ -40,7 +35,7 @@
   &__title {
     font-size: 15px;
     font-weight: 700;
-    color: $primary;
+    color: $primary;     // #011826
     margin: 0 0 3px;
     line-height: 1.2;
   }
@@ -52,21 +47,16 @@
     line-height: 1.5;
   }
 
-  // Scrollable content
   &__body {
     flex: 1;
     overflow-y: auto;
     padding: 14px 18px;
   }
 
-  // Back / Next bar — Win98 buttons rendered by layout, this is a
-  // per-page override area for extra actions inside the content pane
-  &__nav {
-    display: none; // nav is in the window footer, not here
-  }
+  &__nav { display: none; } // nav lives in the window footer
 }
 
-// ── Win98 inset panel (used inside pages) ─────────────────────────
+// ── Win98 inset panel ─────────────────────────────────────────────
 .w98-panel {
   border: 2px solid;
   border-color: #808080 #fff #fff #808080;
@@ -74,10 +64,10 @@
 
   &__head {
     padding: 3px 8px;
-    background: #c0c0c0;
+    background: #F2F2F2;
     font-size: 11px;
     font-weight: 700;
-    color: #000;
+    color: $primary;
     border-bottom: 1px solid #808080;
     display: flex;
     align-items: center;
@@ -86,12 +76,10 @@
     letter-spacing: 0.5px;
   }
 
-  &__body {
-    padding: 10px;
-  }
+  &__body { padding: 10px; }
 }
 
-// ── Win98-style list rows (repos list, provider list) ─────────────
+// ── Win98 Explorer list ───────────────────────────────────────────
 .w98-list {
   border: 2px solid;
   border-color: #808080 #fff #fff #808080;
@@ -110,30 +98,17 @@
   &:last-child { border-bottom: none; }
 
   &:hover {
-    background: $primary;
+    background: $secondary; // #168C40
     color: #fff;
 
     .w98-list-row__meta { color: rgba(255,255,255,0.7); }
   }
 
-  &__name {
-    flex: 1;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-  }
-
-  &__meta {
-    font-size: 11px;
-    color: #808080;
-    flex-shrink: 0;
-  }
+  &__name  { flex: 1; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  &__meta  { font-size: 11px; color: #808080; flex-shrink: 0; }
 }
 
-// ── Win98 field group label ────────────────────────────────────────
+// ── Field label ───────────────────────────────────────────────────
 .w98-field-label {
   font-size: 11px;
   font-weight: 700;

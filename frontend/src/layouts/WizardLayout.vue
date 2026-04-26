@@ -1,7 +1,6 @@
 <template>
-  <!-- Classic Win98 desktop background -->
+  <!-- Win98-style desktop — dark navy instead of teal -->
   <div class="w98-desktop">
-    <!-- The "window" -->
     <div class="w98-window">
 
       <!-- ── Title bar ──────────────────────────────────────────── -->
@@ -41,7 +40,6 @@
             <span>{{ step.label }}</span>
           </div>
 
-          <!-- user chip at bottom of sidebar -->
           <div v-if="auth.isLoggedIn" class="w98-sidebar__user">
             <img
               v-if="auth.user?.avatar_url"
@@ -63,9 +61,7 @@
 
       <!-- ── Footer / button bar ───────────────────────────────── -->
       <div class="w98-footer">
-        <!-- classic Win98 two-line separator -->
         <div class="w98-sep" />
-
         <div class="w98-footer__inner">
           <div class="w98-footer__status">
             Step {{ currentStep }} of {{ steps.length }}
@@ -106,94 +102,84 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import { provideWizardNav } from '../composables/useWizardNav.js'
 
-const auth  = useAuthStore()
-const route = useRoute()
+const auth   = useAuthStore()
+const route  = useRoute()
 const router = useRouter()
-const nav   = provideWizardNav()
+const nav    = provideWizardNav()
 
 const steps = [
   { id: 1, label: 'Welcome' },
-  { id: 2, label: 'Select Repository' },
-  { id: 3, label: 'Configure' },
-  { id: 4, label: 'Extract' },
+  { id: 2, label: 'Sign In' },
+  { id: 3, label: 'Select Repository' },
+  { id: 4, label: 'Configure & Extract' },
 ]
 
 const currentStep = computed(() => {
   const p = route.path
-  if (p === '/login' || p.startsWith('/auth')) return 1
-  if (p === '/repos') return 2
-  if (p === '/extract') return route.query.done ? 4 : 3
+  if (p === '/' || p === '/welcome')      return 1
+  if (p === '/login' || p.startsWith('/auth')) return 2
+  if (p === '/repos')                     return 3
+  if (p === '/extract')                   return 4
   return 1
 })
 
 function logout() {
   auth.logout()
-  router.push('/login')
+  router.push('/welcome')
 }
 </script>
 
 <style lang="scss">
-/* ── Fonts ────────────────────────────────────────────────────── */
 * { font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif; }
 
-/* ── Desktop ──────────────────────────────────────────────────── */
+// ── Desktop ────────────────────────────────────────────────────
 .w98-desktop {
   position: fixed;
   inset: 0;
-  background: #008080;
+  background: $primary; // #011826 dark navy desktop
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* ── Window ───────────────────────────────────────────────────── */
+// ── Window ─────────────────────────────────────────────────────
 .w98-window {
   display: flex;
   flex-direction: column;
   width: min(860px, 98vw);
   height: min(560px, 96vh);
-  background: #c0c0c0;
-
-  /* classic Win98 raised window border */
+  background: #F2F2F2;
   box-shadow:
     inset -1px -1px #0a0a0a,
     inset  1px  1px #ffffff,
     inset -2px -2px #808080,
-    inset  2px  2px #dfdfdf;
+    inset  2px  2px #e8e8e8;
 }
 
-/* ── Title bar ────────────────────────────────────────────────── */
+// ── Title bar ──────────────────────────────────────────────────
 .w98-titlebar {
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 3px 4px 3px 6px;
-  background: linear-gradient(to right, $primary 0%, lighten($primary, 18%) 100%);
+  background: linear-gradient(to right, $primary 0%, #0d3a5c 100%);
   flex-shrink: 0;
   user-select: none;
 
-  &__icon {
-    font-size: 12px;
-    color: #fff;
-  }
-
+  &__icon { font-size: 12px; color: $accent; }
   &__text {
     flex: 1;
     font-size: 11px;
     font-weight: 700;
     color: #fff;
   }
-
-  &__controls {
-    display: flex;
-    gap: 2px;
-  }
+  &__controls { display: flex; gap: 2px; }
 }
 
 .w98-chrome-btn {
   width: 16px;
   height: 14px;
-  background: #c0c0c0;
+  background: #F2F2F2;
   font-size: 9px;
   font-weight: 700;
   display: flex;
@@ -205,12 +191,12 @@ function logout() {
     inset -1px -1px #0a0a0a,
     inset  1px  1px #ffffff,
     inset -2px -2px #808080,
-    inset  2px  2px #dfdfdf;
+    inset  2px  2px #e8e8e8;
 
   &--close { margin-left: 2px; }
 }
 
-/* ── Body ─────────────────────────────────────────────────────── */
+// ── Body ───────────────────────────────────────────────────────
 .w98-body {
   display: flex;
   flex: 1;
@@ -219,7 +205,7 @@ function logout() {
   gap: 3px;
 }
 
-/* ── Sidebar ──────────────────────────────────────────────────── */
+// ── Sidebar ────────────────────────────────────────────────────
 .w98-sidebar {
   width: 176px;
   flex-shrink: 0;
@@ -228,32 +214,16 @@ function logout() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
-
-  /* inset border on right side */
   box-shadow:
-    inset  1px  1px #ffffff44,
-    inset -1px -1px #00000044;
+    inset  1px  1px rgba(255,255,255,0.08),
+    inset -1px -1px rgba(0,0,0,0.3);
 
-  &__logo {
-    text-align: center;
-    font-size: 32px;
-    color: $secondary;
-    margin-bottom: 6px;
-  }
-
-  &__product {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.5px;
-  }
-
+  &__logo    { text-align: center; font-size: 32px; color: $secondary; margin-bottom: 6px; }
+  &__product { text-align: center; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
   &__tagline {
     text-align: center;
     font-size: 10px;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.45);
     margin-top: 2px;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -262,8 +232,8 @@ function logout() {
   &__divider {
     margin: 14px 16px;
     border: none;
-    border-top: 1px solid rgba(255,255,255,0.15);
-    border-bottom: 1px solid rgba(0,0,0,0.3);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.4);
   }
 
   &__step {
@@ -272,25 +242,18 @@ function logout() {
     gap: 7px;
     padding: 5px 14px;
     font-size: 11px;
-    color: rgba(255,255,255,0.45);
+    color: rgba(255,255,255,0.35);
     line-height: 1.3;
 
     &--active {
       color: #fff;
       font-weight: 700;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.07);
     }
-
-    &--done {
-      color: $secondary;
-    }
+    &--done { color: $accent; } // #6BBF89 sage green for done steps
   }
 
-  &__arrow {
-    flex-shrink: 0;
-    font-size: 10px;
-    margin-top: 1px;
-  }
+  &__arrow { flex-shrink: 0; font-size: 10px; margin-top: 1px; }
 
   &__user {
     margin-top: auto;
@@ -298,7 +261,7 @@ function logout() {
     display: flex;
     align-items: center;
     gap: 6px;
-    border-top: 1px solid rgba(255,255,255,0.12);
+    border-top: 1px solid rgba(255,255,255,0.1);
   }
 
   &__avatar {
@@ -310,31 +273,27 @@ function logout() {
 
   &__username {
     font-size: 10px;
-    color: rgba(255,255,255,0.6);
+    color: rgba(255,255,255,0.5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 }
 
-/* ── Content pane ─────────────────────────────────────────────── */
+// ── Content pane ───────────────────────────────────────────────
 .w98-content {
   flex: 1;
   overflow-y: auto;
   background: #fff;
-  /* inset border */
   box-shadow:
     inset  1px  1px #808080,
-    inset -1px -1px #dfdfdf,
+    inset -1px -1px #e8e8e8,
     inset  2px  2px #0a0a0a,
     inset -2px -2px #ffffff;
 }
 
-/* ── Footer ───────────────────────────────────────────────────── */
-.w98-footer {
-  flex-shrink: 0;
-  padding: 0 4px 4px;
-}
+// ── Footer ─────────────────────────────────────────────────────
+.w98-footer { flex-shrink: 0; padding: 0 4px 4px; }
 
 .w98-sep {
   height: 0;
@@ -356,11 +315,7 @@ function logout() {
   padding-left: 4px;
 }
 
-.w98-footer__nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+.w98-footer__nav { display: flex; align-items: center; gap: 4px; }
 
 .w98-btn-sep {
   width: 1px;
@@ -370,12 +325,12 @@ function logout() {
   box-shadow: 1px 0 #fff;
 }
 
-/* ── Win98 buttons ────────────────────────────────────────────── */
+// ── Win98 buttons ──────────────────────────────────────────────
 .w98-btn {
   min-width: 75px;
   height: 23px;
   padding: 0 10px;
-  background: #c0c0c0;
+  background: #F2F2F2;
   color: #000;
   font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
   font-size: 11px;
@@ -386,13 +341,13 @@ function logout() {
     inset -1px -1px #0a0a0a,
     inset  1px  1px #ffffff,
     inset -2px -2px #808080,
-    inset  2px  2px #dfdfdf;
+    inset  2px  2px #e8e8e8;
 
   &:active:not(:disabled) {
     box-shadow:
       inset -1px -1px #ffffff,
       inset  1px  1px #0a0a0a,
-      inset -2px -2px #dfdfdf,
+      inset -2px -2px #e8e8e8,
       inset  2px  2px #808080;
     padding: 1px 9px 0 11px;
   }
@@ -404,23 +359,28 @@ function logout() {
   }
 
   &--primary {
-    /* keep Win98 shape but brand color */
-    background: $primary;
+    background: $secondary; // #168C40 forest green
     color: #fff;
     font-weight: 700;
     box-shadow:
       inset -1px -1px #000,
-      inset  1px  1px lighten($primary, 30%),
-      inset -2px -2px darken($primary, 10%),
-      inset  2px  2px lighten($primary, 15%);
+      inset  1px  1px #6BBF89,
+      inset -2px -2px #0d5a28,
+      inset  2px  2px #2db85a;
 
     &:active:not(:disabled) {
       box-shadow:
-        inset -1px -1px lighten($primary, 30%),
+        inset -1px -1px #6BBF89,
         inset  1px  1px #000,
-        inset -2px -2px lighten($primary, 15%),
-        inset  2px  2px darken($primary, 10%);
+        inset -2px -2px #2db85a,
+        inset  2px  2px #0d5a28;
       padding: 1px 9px 0 11px;
+    }
+
+    &:disabled {
+      background: #A7D9B8;
+      color: #6BBF89;
+      text-shadow: none;
     }
   }
 }
@@ -428,7 +388,7 @@ function logout() {
 .w98-link-btn {
   background: none;
   border: none;
-  color: $secondary;
+  color: $accent; // #6BBF89
   font-size: 11px;
   cursor: pointer;
   padding: 0;

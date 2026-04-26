@@ -3,7 +3,7 @@
     <div class="wiz-page__head">
       <div class="wiz-page__head-icon">🗄</div>
       <div class="wiz-page__head-text">
-        <div class="wiz-page__step-label">Step 2 of 3</div>
+        <div class="wiz-page__step-label">Step 3 of 4</div>
         <h1 class="wiz-page__title">Select Source Repository</h1>
         <p class="wiz-page__desc">
           Double-click (or click) a repository to select it and proceed to configuration.
@@ -139,7 +139,7 @@ function formatDate(iso) {
     inset  1px  1px #0a0a0a,
     inset -1px -1px #ffffff,
     inset  2px  2px #808080,
-    inset -2px -2px #dfdfdf;
+    inset -2px -2px #e8e8e8;
   background: #fff;
 }
 
@@ -154,7 +154,7 @@ function formatDate(iso) {
 
   &__header {
     display: flex;
-    background: #c0c0c0;
+    background: #F2F2F2;
     border-bottom: 1px solid #808080;
     flex-shrink: 0;
 
@@ -193,7 +193,7 @@ function formatDate(iso) {
   border-bottom: 1px solid #efefef;
   cursor: default;
 
-  &:hover { background: #dde8f8; }
+  &:hover { background: #A7D9B8; }
 
   &--selected {
     background: $primary !important;

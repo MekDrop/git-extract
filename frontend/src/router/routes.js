@@ -3,7 +3,8 @@ const routes = [
     path: '/',
     component: () => import('layouts/WizardLayout.vue'),
     children: [
-      { path: '', redirect: '/repos' },
+      { path: '', redirect: '/welcome' },
+      { path: '/welcome', component: () => import('pages/WelcomePage.vue') },
       { path: '/login', component: () => import('pages/LoginPage.vue') },
       { path: '/auth/github', component: () => import('pages/AuthCallback.vue') },
       { path: '/auth/gitlab', component: () => import('pages/AuthCallback.vue') },
