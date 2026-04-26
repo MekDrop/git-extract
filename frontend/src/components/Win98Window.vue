@@ -38,12 +38,45 @@
       <slot />
     </div>
 
-    <!-- ── BSOD easter egg ──────────────────────────────────────────── -->
-    <Transition name="bsod-flash">
-      <div v-if="showBSOD" class="w98-bsod" :class="{ 'w98-bsod--black': bsodBlack }">
-        <pre v-if="!bsodBlack" class="w98-bsod__text">{{ bsodText }}</pre>
+    <!-- ── Boot sequence overlay (BSOD → BIOS → CD → Win98) ────────── -->
+    <div v-if="bootPhase" class="boot-overlay" :class="`boot-phase--${bootPhase}`">
+
+      <!-- BSOD -->
+      <pre v-if="bootPhase === 'bsod'" class="bsod-text">{{ bsodText }}</pre>
+
+      <!-- BIOS POST screen -->
+      <div v-else-if="bootPhase === 'bios'" class="bios-screen">
+        <div
+          v-for="(item, i) in BIOS_CONTENT"
+          :key="i"
+          class="boot-line bios-line"
+          :class="{ 'bios-line--header': i < 2 }"
+          :style="{ '--d': item.delay + 'ms' }"
+        >{{ item.text }}</div>
       </div>
-    </Transition>
+
+      <!-- CD boot -->
+      <div v-else-if="bootPhase === 'cdboot'" class="cdboot-screen">
+        <div
+          v-for="(item, i) in CDBOOT_CONTENT"
+          :key="i"
+          class="boot-line cdboot-line"
+          :style="{ '--d': item.delay + 'ms' }"
+        >{{ item.text }}</div>
+      </div>
+
+      <!-- Starting Windows 98 -->
+      <div v-else-if="bootPhase === 'win98'" class="win98start-screen">
+        <div
+          v-for="(item, i) in WIN98_CONTENT"
+          :key="i"
+          class="boot-line win98-line"
+          :style="{ '--d': item.delay + 'ms' }"
+        >{{ item.text }}</div>
+      </div>
+
+      <!-- 'black' phase: just the black background, no content -->
+    </div>
 
     <!-- ── Close-confirm dialog ───────────────────────────────────── -->
     <div v-if="showCloseConfirm" class="w98-overlay" @click.self="showCloseConfirm = false">
@@ -89,8 +122,7 @@ const dragOffset       = ref({ x: 0, y: 0 })
 const maximized        = ref(false)
 const minimized        = ref(false)
 const showCloseConfirm = ref(false)
-const showBSOD         = ref(false)
-const bsodBlack        = ref(false)
+const bootPhase        = ref(null)   // null|'bsod'|'black'|'bios'|'cdboot'|'win98'
 const bsodCountdown    = ref(3)
 const vw               = ref(window.innerWidth)
 const vh               = ref(window.innerHeight)
@@ -179,27 +211,70 @@ function openCloseDialog() {
   showCloseConfirm.value = true
 }
 
+// ── Boot sequence content ───────────────────────────────────────
+const BIOS_CONTENT = [
+  { text: 'Phoenix - AwardBIOS v6.00PG, An Energy Star Ally',          delay: 0 },
+  { text: 'Copyright (C) 1984-2001, Phoenix Technologies, LTD',        delay: 60 },
+  { text: '',                                                            delay: 150 },
+  { text: 'git-extract Systems, Inc.',                                  delay: 220 },
+  { text: '',                                                            delay: 310 },
+  { text: 'Main Processor  : Intel Pentium III 450MHz',                 delay: 380 },
+  { text: 'Math Coprocessor: Installed',                                delay: 450 },
+  { text: 'Floppy Drive A  : 1.44MB  3.5"',                            delay: 520 },
+  { text: '',                                                            delay: 600 },
+  { text: 'Memory Test :      16384K',                                  delay: 750 },
+  { text: 'Memory Test :     131072K',                                  delay: 950 },
+  { text: 'Memory Test :     524288K  OK',                              delay: 1150 },
+  { text: '',                                                            delay: 1350 },
+  { text: 'Detecting Primary Master   ...  ST320423A      Ultra DMA Mode 5', delay: 1550 },
+  { text: 'Detecting Primary Slave    ...  None',                       delay: 1830 },
+  { text: 'Detecting Secondary Master ...  ASUS CD-524E   PIO Mode 4', delay: 2110 },
+  { text: 'Detecting Secondary Slave  ...  None',                       delay: 2390 },
+  { text: '',                                                            delay: 2600 },
+  { text: 'Press <DEL> to enter SETUP   Press <F12> for Boot Menu',    delay: 2800 },
+  { text: '',                                                            delay: 3100 },
+  { text: 'Booting from CD-ROM...',                                     delay: 3400 },
+]
+
+const CDBOOT_CONTENT = [
+  { text: 'ATAPI CD-ROM: ASUS CD-524E',         delay: 0 },
+  { text: '',                                    delay: 300 },
+  { text: 'Loading boot sector...',              delay: 500 },
+  { text: '',                                    delay: 850 },
+  { text: 'Press any key to boot from CD-ROM.', delay: 1100 },
+]
+
+const WIN98_CONTENT = [
+  { text: 'Microsoft Windows 98',              delay: 0 },
+  { text: '',                                  delay: 200 },
+  { text: '         Starting Windows 98...', delay: 400 },
+]
+
+// ── Boot sequence logic ─────────────────────────────────────────
+function go(phase, ms) { setTimeout(() => { bootPhase.value = phase }, ms) }
+
 function confirmClose() {
   showCloseConfirm.value = false
-  showBSOD.value      = true
-  bsodBlack.value     = false
-  bsodCountdown.value = 3
+  bsodCountdown.value    = 3
+  bootPhase.value        = 'bsod'
 
-  // Tick down the countdown every second
   const ticker = setInterval(() => {
     bsodCountdown.value--
     if (bsodCountdown.value <= 0) clearInterval(ticker)
   }, 1000)
 
-  // Screen goes black after 3.5 s
-  setTimeout(() => { bsodBlack.value = true }, 3500)
+  go('black',  3000)   // brief black after BSOD
+  go('bios',   3500)   // BIOS POST screen
+  go('black',  7900)   // brief black
+  go('cdboot', 8300)   // CD boot prompt
+  go('black',  9900)   // brief black
+  go('win98',  10300)  // Starting Windows 98...
+  go('black',  12000)  // final black — screen off
 
-  // "Reboot": hide BSOD and emit close after 4.2 s
   setTimeout(() => {
-    showBSOD.value  = false
-    bsodBlack.value = false
+    bootPhase.value = null
     emit('close')
-  }, 4200)
+  }, 12500)
 }
 
 const bsodText = computed(() => `\
@@ -551,48 +626,89 @@ Restarting git-extract setup in ${bsodCountdown.value}...\
   box-shadow: 1px 0 #fff;
 }
 
-// ── BSOD easter egg ────────────────────────────────────────────
-.w98-bsod {
+// ── Boot overlay ───────────────────────────────────────────────
+// Base: always covers the full screen in black
+.boot-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #0000AA;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 48px 10%;
+  background: #000;
+  overflow: hidden;
 
-  &--black {
-    background: #000;
-    transition: background 0.12s ease-in;
-  }
-
-  &__text {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    line-height: 1.65;
-    color: #fff;
-    white-space: pre;
-    margin: 0;
-    padding: 0;
-  }
+  // BSOD phase snaps to blue
+  &.boot-phase--bsod { background: #0000AA; }
 }
 
-// The BSOD appears instantly with a monitor-flicker feel:
-// frame 0→5% black flash, then slam to blue
-@keyframes bsod-in {
-  0%   { opacity: 0; background: #000; }
-  8%   { opacity: 1; background: #000; }
-  12%  { opacity: 1; background: #0000AA; }
-  18%  { opacity: 0; background: #0000AA; }  // tiny flicker
-  22%  { opacity: 1; background: #0000AA; }
-  100% { opacity: 1; background: #0000AA; }
+// Whole overlay flickers in like a CRT turning on
+@keyframes boot-flicker {
+  0%   { opacity: 0; }
+  6%   { opacity: 1; }
+  10%  { opacity: 0; }
+  14%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+.boot-overlay { animation: boot-flicker 0.25s steps(1) forwards; }
+
+// ── BSOD text ──────────────────────────────────────────────────
+.bsod-text {
+  display: block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #fff;
+  white-space: pre;
+  margin: 48px 10% 0;
+  padding: 0;
 }
 
-.bsod-flash-enter-active {
-  animation: bsod-in 0.28s steps(1, end) forwards;
+// ── Shared line-reveal animation ───────────────────────────────
+// Each line starts invisible and pops in at its own --d delay.
+@keyframes line-appear {
+  to { opacity: 1; }
 }
-// no leave animation — black phase handles the fade-out
-.bsod-flash-leave-active { transition: none; }
-.bsod-flash-leave-to     { opacity: 0; }
+
+.boot-line {
+  opacity: 0;
+  animation: line-appear 1ms var(--d, 0ms) step-end forwards;
+  white-space: pre;        // preserve indent
+  min-height: 1em;         // blank lines still take up space
+  font-family: 'Courier New', Courier, monospace;
+}
+
+// ── BIOS POST screen ───────────────────────────────────────────
+.bios-screen {
+  padding: 18px 36px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #aaaaaa;          // default grey like a real BIOS
+}
+
+.bios-line {
+  &--header { color: #ffffff; } // copyright lines brighter
+}
+
+// ── CD boot screen ─────────────────────────────────────────────
+.cdboot-screen {
+  padding: 18px 36px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #ffffff;
+}
+
+// blinking cursor on last CD boot line
+.cdboot-line:last-child::after {
+  content: '_';
+  animation: blink-cur 1s step-end infinite;
+  animation-delay: 1.3s;
+  opacity: 0;
+}
+@keyframes blink-cur { 50% { opacity: 1; } }
+
+// ── Windows 98 start screen ────────────────────────────────────
+.win98start-screen {
+  padding: 18px 36px;
+  font-size: 14px;
+  line-height: 2;
+  color: #ffffff;
+}
 </style>
