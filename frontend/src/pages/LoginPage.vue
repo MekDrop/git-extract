@@ -6,7 +6,7 @@
         <div class="wiz-page__step-label">Step 2 of 4</div>
         <h1 class="wiz-page__title">Sign In</h1>
         <p class="wiz-page__desc">
-          Select a Git provider, then click <strong>Sign In &gt;</strong> to connect your account.
+          Select a Git provider, then click <strong>Sign In &gt;</strong>.
         </p>
       </div>
     </div>
@@ -16,9 +16,7 @@
       <!-- Error banner -->
       <div v-if="errorMessage" class="login-error">⚠ {{ errorMessage }}</div>
 
-      <div class="w98-field-label" style="margin-bottom:10px">
-        How would you like to sign in?
-      </div>
+      <p class="login-intro">How would you like to sign in?</p>
 
       <!-- ── Provider radio options ──────────────────────────────── -->
       <div class="provider-options">
@@ -26,22 +24,19 @@
           v-for="p in providers"
           :key="p.id"
           class="provider-option"
-          :class="{ 'provider-option--selected': selected === p.id }"
         >
           <input
             type="radio"
+            name="provider"
             :value="p.id"
             v-model="selected"
-            class="provider-option__radio"
           />
-          <q-icon
-            :name="p.icon"
-            class="provider-option__icon"
-            :class="`provider-option__icon--${p.id}`"
-          />
-          <div class="provider-option__text">
-            <div class="provider-option__name">{{ p.name }}</div>
-            <div class="provider-option__desc">{{ p.desc }}</div>
+          <div class="provider-option__body">
+            <span class="provider-option__name">
+              <q-icon :name="p.icon" class="provider-option__icon" :class="`provider-option__icon--${p.id}`" />
+              {{ p.name }}
+            </span>
+            <span class="provider-option__desc">{{ p.desc }}</span>
           </div>
         </label>
       </div>
@@ -64,7 +59,7 @@
               />
               <div class="host-hint">
                 Use <code>gitlab.com</code> for the public instance.
-                Change for a self-hosted GitLab server.
+                Change only for self-hosted GitLab servers.
               </div>
             </div>
           </div>
@@ -84,7 +79,7 @@ import { useWizardNav } from '../composables/useWizardNav.js'
 const route      = useRoute()
 const router     = useRouter()
 const nav        = useWizardNav()
-const selected   = ref(null)          // 'github' | 'gitlab' | null
+const selected   = ref(null)
 const gitlabHost = ref('gitlab.com')
 
 const providers = [
@@ -92,13 +87,13 @@ const providers = [
     id:   'github',
     name: 'GitHub',
     icon: 'fab fa-github',
-    desc: 'Sign in with GitHub via OAuth. Accesses public and private repositories.',
+    desc: 'Sign in with GitHub via OAuth — grants access to public and private repositories.',
   },
   {
     id:   'gitlab',
     name: 'GitLab',
     icon: 'fab fa-gitlab',
-    desc: 'Sign in with GitLab via PKCE. Works with gitlab.com or a self-hosted instance.',
+    desc: 'Sign in with GitLab via PKCE — works with gitlab.com or a self-hosted instance.',
   },
 ]
 
@@ -151,100 +146,89 @@ async function loginGitlab() {
 .login-error {
   font-size: 11px;
   padding: 5px 10px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   border: 2px solid #c10015;
   background: #ffeeee;
   color: #c10015;
   max-width: 420px;
 }
 
+// ── Intro text ─────────────────────────────────────────────────────
+.login-intro {
+  font-size: 12px;
+  color: #000;
+  margin: 0 0 10px;
+}
+
 // ── Provider radio options ─────────────────────────────────────────
+// Intentionally plain — no boxes, no raised borders.
+// This matches real Win98 wizard radio-button pages
+// (Internet Connection Wizard, Add Hardware Wizard, etc.)
 .provider-options {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 420px;
-  margin-bottom: 16px;
+  gap: 2px;
+  max-width: 440px;
+  margin-bottom: 18px;
 }
 
 .provider-option {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 4px 2px;
   cursor: pointer;
-  background: #F2F2F2;
-  border: 2px solid transparent;
+  user-select: none;
 
-  // Subtle raised surround
-  box-shadow:
-    inset -1px -1px #0a0a0a,
-    inset  1px  1px #ffffff,
-    inset -2px -2px #808080,
-    inset  2px  2px #e8e8e8;
+  // No background, no box-shadow — just the native radio + text on white
 
-  &:hover:not(.provider-option--selected) {
-    background: #e8e8e8;
-  }
-
-  &--selected {
-    background: #fff;
-    box-shadow:
-      inset  1px  1px #0a0a0a,
-      inset -1px -1px #ffffff,
-      inset  2px  2px #808080,
-      inset -2px -2px #e8e8e8;
-  }
-
-  &__radio {
+  input[type='radio'] {
     flex-shrink: 0;
-    width: 13px;
-    height: 13px;
-    margin: 0;
+    margin: 3px 0 0;
     cursor: pointer;
     accent-color: $primary;
   }
 
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1;
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #000;
+  }
+
   &__icon {
-    font-size: 22px !important;
-    flex-shrink: 0;
-    color: #444;
-    width: 26px;
-    text-align: center;
+    font-size: 14px !important;
+    color: #333;
 
     &--gitlab { color: #e24329; }
   }
 
-  &__text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__name {
-    font-size: 12px;
-    font-weight: 700;
-    color: #000;
-    line-height: 1;
-  }
-
   &__desc {
-    font-size: 10px;
-    color: #666;
-    line-height: 1.35;
+    font-size: 11px;
+    color: #444;
+    line-height: 1.45;
+    padding-left: 19px; // indent to align under the name text
   }
 }
 
 // ── GitLab host group box ──────────────────────────────────────────
-.gitlab-host-box { max-width: 420px; }
+.gitlab-host-box { max-width: 380px; }
 
 .w98-group-box {
   border: 1px solid #808080;
   box-shadow: 1px 1px 0 #fff;
   padding: 0 10px 10px;
   position: relative;
-  margin-top: 4px;
+  margin-top: 2px;
 
   &__label {
     position: absolute;
