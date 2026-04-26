@@ -16,44 +16,37 @@
       <!-- Error banner -->
       <div v-if="errorMessage" class="login-error">⚠ {{ errorMessage }}</div>
 
-      <div class="w98-field-label" style="margin-bottom:10px">
-        Which provider would you like to use?
-      </div>
+      <label class="w98-field-label" style="margin-bottom:6px;display:block">
+        Select a provider:
+      </label>
 
-      <!-- ── Provider tiles ──────────────────────────────────────── -->
-      <div class="provider-tiles">
-
-        <button
-          class="provider-tile"
-          :class="{ 'provider-tile--selected': selected === 'github' }"
-          @click="selected = 'github'"
+      <!-- ── Provider list ───────────────────────────────────────── -->
+      <div class="provider-listbox" @keydown="onKeyDown" tabindex="0">
+        <div
+          v-for="p in providers"
+          :key="p.id"
+          class="provider-row"
+          :class="{ 'provider-row--selected': selected === p.id }"
+          @click="selected = p.id"
           @dblclick="proceed"
         >
-          <q-icon name="fab fa-github" class="provider-tile__icon" />
-          <div class="provider-tile__name">GitHub</div>
-          <div class="provider-tile__meta">OAuth&nbsp;·&nbsp;public &amp; private repos</div>
-        </button>
-
-        <button
-          class="provider-tile"
-          :class="{ 'provider-tile--selected': selected === 'gitlab' }"
-          @click="selected = 'gitlab'"
-          @dblclick="proceed"
-        >
-          <q-icon name="fab fa-gitlab" class="provider-tile__icon provider-tile__icon--gitlab" />
-          <div class="provider-tile__name">GitLab</div>
-          <div class="provider-tile__meta">PKCE&nbsp;·&nbsp;gitlab.com or self-hosted</div>
-        </button>
-
+          <q-icon :name="p.icon" class="provider-row__icon" :class="`provider-row__icon--${p.id}`" />
+          <div class="provider-row__info">
+            <span class="provider-row__name">{{ p.name }}</span>
+            <span class="provider-row__meta">{{ p.meta }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- ── GitLab host (only when GitLab selected) ─────────────── -->
-      <transition name="fade">
+      <transition name="slide">
         <div v-if="selected === 'gitlab'" class="gitlab-host-box">
           <div class="w98-group-box">
             <div class="w98-group-box__label">GitLab Instance</div>
             <div class="w98-group-box__body">
-              <label class="w98-field-label" for="gl-host">Host:</label>
+              <label class="w98-field-label" for="gl-host" style="display:block;margin-bottom:4px">
+                Host:
+              </label>
               <input
                 id="gl-host"
                 v-model="gitlabHost"
@@ -86,6 +79,11 @@ const nav        = useWizardNav()
 const selected   = ref(null)          // 'github' | 'gitlab' | null
 const gitlabHost = ref('gitlab.com')
 
+const providers = [
+  { id: 'github', name: 'GitHub',  icon: 'fab fa-github', meta: 'OAuth · public & private repos' },
+  { id: 'gitlab', name: 'GitLab',  icon: 'fab fa-gitlab', meta: 'PKCE · gitlab.com or self-hosted' },
+]
+
 onMounted(updateNav)
 watch(selected, updateNav)
 
@@ -111,6 +109,20 @@ const errorMessage = computed(() => {
   }
   return map[route.query.error] ?? `Authentication error: ${route.query.error}`
 })
+
+function onKeyDown(e) {
+  const ids = providers.map((p) => p.id)
+  const idx = ids.indexOf(selected.value)
+  if (e.key === 'ArrowDown') {
+    selected.value = ids[Math.min(idx + 1, ids.length - 1)]
+    e.preventDefault()
+  } else if (e.key === 'ArrowUp') {
+    selected.value = ids[Math.max(idx - 1, 0)]
+    e.preventDefault()
+  } else if (e.key === 'Enter' && selected.value) {
+    proceed()
+  }
+}
 
 async function proceed() {
   if (selected.value === 'github') loginGithub()
@@ -142,85 +154,86 @@ async function loginGitlab() {
   max-width: 420px;
 }
 
-// ── Provider tiles ─────────────────────────────────────────────────
-.provider-tiles {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
+// ── Provider list box ──────────────────────────────────────────────
+.provider-listbox {
+  max-width: 360px;
+  background: #fff;
+  margin-bottom: 14px;
+  outline: none;
 
-.provider-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 120px;
-  padding: 14px 10px 10px;
-  background: #F2F2F2;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-  color: #000;
-  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
-
-  // Win98 raised button look
+  // Classic Win98 sunken listbox border
   box-shadow:
-    inset -1px -1px #0a0a0a,
-    inset  1px  1px #ffffff,
-    inset -2px -2px #808080,
-    inset  2px  2px #e8e8e8;
+    inset  1px  1px #0a0a0a,
+    inset -1px -1px #ffffff,
+    inset  2px  2px #808080,
+    inset -2px -2px #e8e8e8;
 
-  &:hover:not(.provider-tile--selected) {
-    background: #e4e4e4;
-  }
-
-  &:active:not(.provider-tile--selected) {
-    box-shadow:
-      inset -1px -1px #ffffff,
-      inset  1px  1px #0a0a0a,
-      inset -2px -2px #e8e8e8,
-      inset  2px  2px #808080;
-    padding-top: 15px;
-    padding-left: 11px;
-  }
-
-  // Selected: sunken + navy fill
-  &--selected {
+  &:focus-within .provider-row--selected {
     background: $primary;
     color: #fff;
-    box-shadow:
-      inset -1px -1px #ffffff,
-      inset  1px  1px #0a0a0a,
-      inset -2px -2px #e8e8e8,
-      inset  2px  2px #808080;
 
-    .provider-tile__icon      { color: #fff; }
-    .provider-tile__icon--gitlab { color: #fff; }
-    .provider-tile__meta      { color: rgba(255,255,255,0.65); }
+    .provider-row__meta           { color: rgba(255,255,255,0.65); }
+    .provider-row__icon           { color: #fff; }
+    .provider-row__icon--gitlab   { color: #fff; }
+  }
+}
+
+.provider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  cursor: default;
+  border-bottom: 1px solid #ececec;
+  user-select: none;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover:not(.provider-row--selected) {
+    background: $accent; // #6BBF89 — subtle hover
+    color: #000;
+  }
+
+  // Unfocused selection (grey like Win98)
+  &--selected {
+    background: #808080;
+    color: #fff;
+
+    .provider-row__meta         { color: rgba(255,255,255,0.7); }
+    .provider-row__icon         { color: #fff; }
+    .provider-row__icon--gitlab { color: #fff; }
   }
 
   &__icon {
-    font-size: 36px !important;
+    font-size: 18px !important;
+    flex-shrink: 0;
     color: #333;
 
     &--gitlab { color: #e24329; }
   }
 
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
   &__name {
     font-size: 12px;
     font-weight: 700;
-    line-height: 1;
+    white-space: nowrap;
   }
 
   &__meta {
     font-size: 10px;
-    color: #666;
-    line-height: 1.3;
+    color: #808080;
+    white-space: nowrap;
   }
 }
 
 // ── GitLab host group box ──────────────────────────────────────────
-.gitlab-host-box { max-width: 340px; }
+.gitlab-host-box { max-width: 360px; }
 
 .w98-group-box {
   border: 1px solid #808080;
@@ -240,7 +253,7 @@ async function loginGitlab() {
     color: #000;
   }
 
-  &__body { padding-top: 8px; }
+  &__body { padding-top: 10px; }
 }
 
 .w98-input-host {
@@ -257,7 +270,7 @@ async function loginGitlab() {
     inset -2px -2px #e8e8e8;
   background: #fff;
   box-sizing: border-box;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .host-hint {
@@ -273,9 +286,9 @@ async function loginGitlab() {
   }
 }
 
-// ── Fade transition ────────────────────────────────────────────────
-.fade-enter-active,
-.fade-leave-active { transition: opacity 0.15s; }
-.fade-enter-from,
-.fade-leave-to     { opacity: 0; }
+// ── Slide-down transition ──────────────────────────────────────────
+.slide-enter-active { transition: opacity 0.15s, transform 0.15s; }
+.slide-leave-active { transition: opacity 0.1s,  transform 0.1s; }
+.slide-enter-from   { opacity: 0; transform: translateY(-4px); }
+.slide-leave-to     { opacity: 0; transform: translateY(-4px); }
 </style>
