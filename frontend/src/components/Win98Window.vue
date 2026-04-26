@@ -38,6 +38,13 @@
       <slot />
     </div>
 
+    <!-- ── BSOD easter egg ──────────────────────────────────────────── -->
+    <Transition name="bsod-flash">
+      <div v-if="showBSOD" class="w98-bsod" :class="{ 'w98-bsod--black': bsodBlack }">
+        <pre v-if="!bsodBlack" class="w98-bsod__text">{{ bsodText }}</pre>
+      </div>
+    </Transition>
+
     <!-- ── Close-confirm dialog ───────────────────────────────────── -->
     <div v-if="showCloseConfirm" class="w98-overlay" @click.self="showCloseConfirm = false">
       <div class="w98-dialog">
@@ -82,6 +89,9 @@ const dragOffset       = ref({ x: 0, y: 0 })
 const maximized        = ref(false)
 const minimized        = ref(false)
 const showCloseConfirm = ref(false)
+const showBSOD         = ref(false)
+const bsodBlack        = ref(false)
+const bsodCountdown    = ref(3)
 const vw               = ref(window.innerWidth)
 const vh               = ref(window.innerHeight)
 
@@ -171,8 +181,42 @@ function openCloseDialog() {
 
 function confirmClose() {
   showCloseConfirm.value = false
-  emit('close')
+  showBSOD.value      = true
+  bsodBlack.value     = false
+  bsodCountdown.value = 3
+
+  // Tick down the countdown every second
+  const ticker = setInterval(() => {
+    bsodCountdown.value--
+    if (bsodCountdown.value <= 0) clearInterval(ticker)
+  }, 1000)
+
+  // Screen goes black after 3.5 s
+  setTimeout(() => { bsodBlack.value = true }, 3500)
+
+  // "Reboot": hide BSOD and emit close after 4.2 s
+  setTimeout(() => {
+    showBSOD.value  = false
+    bsodBlack.value = false
+    emit('close')
+  }, 4200)
 }
+
+const bsodText = computed(() => `\
+Windows
+
+A fatal exception 0E has occurred at 0028:C061B3F7 in VxD git-
+extract(09) + 0000B3F7. The current application will be
+terminated.
+
+*  Press any key to terminate the current application.
+
+*  Press CTRL+ALT+DEL to restart your computer. You will
+   lose any unsaved information in all applications.
+
+
+Restarting git-extract setup in ${bsodCountdown.value}...\
+`)
 </script>
 
 <style lang="scss">
@@ -506,4 +550,49 @@ function confirmClose() {
   margin: 0 4px;
   box-shadow: 1px 0 #fff;
 }
+
+// ── BSOD easter egg ────────────────────────────────────────────
+.w98-bsod {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0000AA;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 48px 10%;
+
+  &--black {
+    background: #000;
+    transition: background 0.12s ease-in;
+  }
+
+  &__text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #fff;
+    white-space: pre;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+// The BSOD appears instantly with a monitor-flicker feel:
+// frame 0→5% black flash, then slam to blue
+@keyframes bsod-in {
+  0%   { opacity: 0; background: #000; }
+  8%   { opacity: 1; background: #000; }
+  12%  { opacity: 1; background: #0000AA; }
+  18%  { opacity: 0; background: #0000AA; }  // tiny flicker
+  22%  { opacity: 1; background: #0000AA; }
+  100% { opacity: 1; background: #0000AA; }
+}
+
+.bsod-flash-enter-active {
+  animation: bsod-in 0.28s steps(1, end) forwards;
+}
+// no leave animation — black phase handles the fade-out
+.bsod-flash-leave-active { transition: none; }
+.bsod-flash-leave-to     { opacity: 0; }
 </style>
