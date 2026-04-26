@@ -29,7 +29,7 @@
 
         <div class="w98-titlebar__controls" @mousedown.stop>
           <button class="w98-chrome-btn" title="Minimize" disabled>_</button>
-          <button class="w98-chrome-btn" title="Maximize" disabled>□</button>
+          <button class="w98-chrome-btn" title="Maximize" :disabled="!maximizable">□</button>
           <button class="w98-chrome-btn w98-chrome-btn--close" title="Close" @click.stop="openCloseDialog">✕</button>
         </div>
       </div>
@@ -67,9 +67,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
-  title: { type: String, default: 'Window' },
-  width: { type: Number, default: 860 },
-  height: { type: Number, default: 560 },
+  title:       { type: String,  default: 'Window' },
+  width:       { type: Number,  default: 860 },
+  height:      { type: Number,  default: 560 },
+  maximizable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['close'])
@@ -136,6 +137,7 @@ function restore() {
 }
 
 function toggleMaximize() {
+  if (!props.maximizable) return
   maximized.value = !maximized.value
 }
 

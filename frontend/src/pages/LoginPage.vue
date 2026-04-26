@@ -16,26 +16,34 @@
       <!-- Error banner -->
       <div v-if="errorMessage" class="login-error">⚠ {{ errorMessage }}</div>
 
-      <label class="w98-field-label" style="margin-bottom:6px;display:block">
-        Select a provider:
-      </label>
+      <div class="w98-field-label" style="margin-bottom:10px">
+        How would you like to sign in?
+      </div>
 
-      <!-- ── Provider list ───────────────────────────────────────── -->
-      <div class="provider-listbox" @keydown="onKeyDown" tabindex="0">
-        <div
+      <!-- ── Provider radio options ──────────────────────────────── -->
+      <div class="provider-options">
+        <label
           v-for="p in providers"
           :key="p.id"
-          class="provider-row"
-          :class="{ 'provider-row--selected': selected === p.id }"
-          @click="selected = p.id"
-          @dblclick="proceed"
+          class="provider-option"
+          :class="{ 'provider-option--selected': selected === p.id }"
         >
-          <q-icon :name="p.icon" class="provider-row__icon" :class="`provider-row__icon--${p.id}`" />
-          <div class="provider-row__info">
-            <span class="provider-row__name">{{ p.name }}</span>
-            <span class="provider-row__meta">{{ p.meta }}</span>
+          <input
+            type="radio"
+            :value="p.id"
+            v-model="selected"
+            class="provider-option__radio"
+          />
+          <q-icon
+            :name="p.icon"
+            class="provider-option__icon"
+            :class="`provider-option__icon--${p.id}`"
+          />
+          <div class="provider-option__text">
+            <div class="provider-option__name">{{ p.name }}</div>
+            <div class="provider-option__desc">{{ p.desc }}</div>
           </div>
-        </div>
+        </label>
       </div>
 
       <!-- ── GitLab host (only when GitLab selected) ─────────────── -->
@@ -80,8 +88,18 @@ const selected   = ref(null)          // 'github' | 'gitlab' | null
 const gitlabHost = ref('gitlab.com')
 
 const providers = [
-  { id: 'github', name: 'GitHub',  icon: 'fab fa-github', meta: 'OAuth · public & private repos' },
-  { id: 'gitlab', name: 'GitLab',  icon: 'fab fa-gitlab', meta: 'PKCE · gitlab.com or self-hosted' },
+  {
+    id:   'github',
+    name: 'GitHub',
+    icon: 'fab fa-github',
+    desc: 'Sign in with GitHub via OAuth. Accesses public and private repositories.',
+  },
+  {
+    id:   'gitlab',
+    name: 'GitLab',
+    icon: 'fab fa-gitlab',
+    desc: 'Sign in with GitLab via PKCE. Works with gitlab.com or a self-hosted instance.',
+  },
 ]
 
 onMounted(updateNav)
@@ -109,20 +127,6 @@ const errorMessage = computed(() => {
   }
   return map[route.query.error] ?? `Authentication error: ${route.query.error}`
 })
-
-function onKeyDown(e) {
-  const ids = providers.map((p) => p.id)
-  const idx = ids.indexOf(selected.value)
-  if (e.key === 'ArrowDown') {
-    selected.value = ids[Math.min(idx + 1, ids.length - 1)]
-    e.preventDefault()
-  } else if (e.key === 'ArrowUp') {
-    selected.value = ids[Math.max(idx - 1, 0)]
-    e.preventDefault()
-  } else if (e.key === 'Enter' && selected.value) {
-    proceed()
-  }
-}
 
 async function proceed() {
   if (selected.value === 'github') loginGithub()
@@ -154,93 +158,93 @@ async function loginGitlab() {
   max-width: 420px;
 }
 
-// ── Provider list box ──────────────────────────────────────────────
-.provider-listbox {
-  max-width: 360px;
-  background: #fff;
-  margin-bottom: 14px;
-  outline: none;
-
-  // Classic Win98 sunken listbox border
-  box-shadow:
-    inset  1px  1px #0a0a0a,
-    inset -1px -1px #ffffff,
-    inset  2px  2px #808080,
-    inset -2px -2px #e8e8e8;
-
-  &:focus-within .provider-row--selected {
-    background: $primary;
-    color: #fff;
-
-    .provider-row__meta           { color: rgba(255,255,255,0.65); }
-    .provider-row__icon           { color: #fff; }
-    .provider-row__icon--gitlab   { color: #fff; }
-  }
+// ── Provider radio options ─────────────────────────────────────────
+.provider-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+  margin-bottom: 16px;
 }
 
-.provider-row {
+.provider-option {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
-  cursor: default;
-  border-bottom: 1px solid #ececec;
-  user-select: none;
+  padding: 9px 12px;
+  cursor: pointer;
+  background: #F2F2F2;
+  border: 2px solid transparent;
 
-  &:last-child { border-bottom: none; }
+  // Subtle raised surround
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset  1px  1px #ffffff,
+    inset -2px -2px #808080,
+    inset  2px  2px #e8e8e8;
 
-  &:hover:not(.provider-row--selected) {
-    background: $accent; // #6BBF89 — subtle hover
-    color: #000;
+  &:hover:not(.provider-option--selected) {
+    background: #e8e8e8;
   }
 
-  // Unfocused selection (grey like Win98)
   &--selected {
-    background: #808080;
-    color: #fff;
+    background: #fff;
+    box-shadow:
+      inset  1px  1px #0a0a0a,
+      inset -1px -1px #ffffff,
+      inset  2px  2px #808080,
+      inset -2px -2px #e8e8e8;
+  }
 
-    .provider-row__meta         { color: rgba(255,255,255,0.7); }
-    .provider-row__icon         { color: #fff; }
-    .provider-row__icon--gitlab { color: #fff; }
+  &__radio {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: $primary;
   }
 
   &__icon {
-    font-size: 18px !important;
+    font-size: 22px !important;
     flex-shrink: 0;
-    color: #333;
+    color: #444;
+    width: 26px;
+    text-align: center;
 
     &--gitlab { color: #e24329; }
   }
 
-  &__info {
+  &__text {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     min-width: 0;
   }
 
   &__name {
     font-size: 12px;
     font-weight: 700;
-    white-space: nowrap;
+    color: #000;
+    line-height: 1;
   }
 
-  &__meta {
+  &__desc {
     font-size: 10px;
-    color: #808080;
-    white-space: nowrap;
+    color: #666;
+    line-height: 1.35;
   }
 }
 
 // ── GitLab host group box ──────────────────────────────────────────
-.gitlab-host-box { max-width: 360px; }
+.gitlab-host-box { max-width: 420px; }
 
 .w98-group-box {
   border: 1px solid #808080;
   box-shadow: 1px 1px 0 #fff;
   padding: 0 10px 10px;
   position: relative;
-  margin-top: 6px;
+  margin-top: 4px;
 
   &__label {
     position: absolute;
